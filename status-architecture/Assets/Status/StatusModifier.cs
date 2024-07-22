@@ -5,9 +5,9 @@ using System.Text;
 using UniRx;
 using UnityEngine;
 
-namespace Proffeine.Stats
+namespace Proffeine.Status
 {
-    public partial class Stats
+    public partial class Status
     {
         public class Modifier
         {
@@ -24,8 +24,8 @@ namespace Proffeine.Stats
             }
 
             private ReactiveDictionary<string, ReactiveDictionary<Key, Info>> casterInfo = new();
-            private Stats percentValues = new();
-            private Stats addValues = new();
+            private Status percentValues = new();
+            private Status addValues = new();
 
             public event Action<Key> OnValueChange;
 
@@ -156,16 +156,16 @@ namespace Proffeine.Stats
             }
 
             /// <summary>
-            /// Apply modified value to target stats <br/>
+            /// Apply modified value to target status <br/>
             /// </summary>
-            /// <param name="target">target apply stats</param>
-            /// <param name="base">base stats</param>
-            public void CalculateAll(Stats target, Stats @base)
+            /// <param name="target">target apply status</param>
+            /// <param name="base">base status</param>
+            public void CalculateAll(Status target, Status @base)
             {
                 target.ChangeFrom(@base);
 
-                var percent = percentValues.GetStats();
-                var add = addValues.GetStats();
+                var percent = percentValues.GetStatus();
+                var add = addValues.GetStatus();
 
                 for (int i = 0; i < percent.Count; i++)
                     target.SetStat((Key)i, x => x + x * percent[i]);
@@ -174,13 +174,13 @@ namespace Proffeine.Stats
             }
 
             /// <summary>
-            /// Apply modified value to target stats <br/>
+            /// Apply modified value to target status <br/>
             /// If you want to change calculation, modify this method
             /// </summary>
             /// <param name="key">target calculate key</param>
-            /// <param name="target">target apply stats</param>
-            /// <param name="base">base stats</param>
-            public void Calculate(Key key, Stats target, Stats @base)
+            /// <param name="target">target apply status</param>
+            /// <param name="base">base status</param>
+            public void Calculate(Key key, Status target, Status @base)
             {
                 //base + base * percent + add
                 target.SetStat(key, x => @base.GetStat(key) * (percentValues.GetStat(key) + 1));

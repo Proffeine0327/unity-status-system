@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using UniRx;
 
-namespace Proffeine.Stats
+namespace Proffeine.Status
 {
-    public partial class Stats
+    public partial class Status
     {
         //define
         public enum Key
@@ -19,7 +19,7 @@ namespace Proffeine.Stats
         }
 
         //field
-        private ReactiveCollection<float> stats;
+        private ReactiveCollection<float> status;
 
         //event
         /// <summary>
@@ -28,13 +28,13 @@ namespace Proffeine.Stats
         public event Action<Key, float, float> OnStatChanged;
 
         //method
-        public Stats()
+        public Status()
         {
-            stats = new();
+            status = new();
             for (int i = 0; i < (int)Key.End; i++)
-                stats.Add(0);
+                status.Add(0);
 
-            stats
+            status
                 .ObserveReplace()
                 .Subscribe(e => OnStatChanged?.Invoke((Key)e.Index, e.OldValue, e.NewValue));
         }
@@ -47,12 +47,12 @@ namespace Proffeine.Stats
 
         public float GetStat(Key key)
         {
-            return stats[(int)key];
+            return status[(int)key];
         }
 
-        public IReadOnlyList<float> GetStats()
+        public IReadOnlyList<float> GetStatus()
         {
-            return stats;
+            return status;
         }
 
         /// <summary>
@@ -62,27 +62,27 @@ namespace Proffeine.Stats
         /// <param name="modifier">parameter: current value, return: target value</param>
         public void SetStat(Key key, Func<float, float> modifier)
         {
-            stats[(int)key] = modifier(stats[(int)key]);
+            status[(int)key] = modifier(status[(int)key]);
         }
 
-        public Stats Clone()
+        public Status Clone()
         {
-            var stats = new Stats();
-            stats.ChangeFrom(this);
-            return stats;
+            var status = new Status();
+            status.ChangeFrom(this);
+            return status;
         }
 
-        public void ChangeFrom(Stats target)
+        public void ChangeFrom(Status target)
         {
-            var stats = target.GetStats();
-            for (int i = 0; i < stats.Count; i++)
-                SetStat((Key)i, x => stats[i]);
+            var status = target.GetStatus();
+            for (int i = 0; i < status.Count; i++)
+                SetStat((Key)i, x => status[i]);
         }
 
         public override string ToString()
         {
             var sb = new StringBuilder();
-            foreach (var stat in stats)
+            foreach (var stat in status)
                 sb.Append(stat.ToString()).Append('\n');
             return sb.ToString();
         }
