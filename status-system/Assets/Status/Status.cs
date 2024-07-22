@@ -14,8 +14,7 @@ namespace Proffeine.Status
             // e.g.
             // Hp, Mp, Attack_Damage, etc
 
-            //'End' must be last.
-            End
+            End //'End' must be last.
         }
 
         //field
@@ -41,16 +40,16 @@ namespace Proffeine.Status
 
         public float this[Key key]
         {
-            get => GetStat(key);
-            set => SetStat(key, x => value);
+            get => GetStatus(key);
+            set => SetStatus(key, x => value);
         }
 
-        public float GetStat(Key key)
+        public float GetStatus(Key key)
         {
             return status[(int)key];
         }
 
-        public IReadOnlyList<float> GetStatus()
+        public IReadOnlyList<float> GetAllStatus()
         {
             return status;
         }
@@ -60,7 +59,7 @@ namespace Proffeine.Status
         /// </summary>
         /// <param name="key">target stat key</param>
         /// <param name="modifier">parameter: current value, return: target value</param>
-        public void SetStat(Key key, Func<float, float> modifier)
+        public void SetStatus(Key key, Func<float, float> modifier)
         {
             status[(int)key] = modifier(status[(int)key]);
         }
@@ -74,9 +73,9 @@ namespace Proffeine.Status
 
         public void ChangeFrom(Status target)
         {
-            var status = target.GetStatus();
+            var status = target.GetAllStatus();
             for (int i = 0; i < status.Count; i++)
-                SetStat((Key)i, x => status[i]);
+                SetStatus((Key)i, x => status[i]);
         }
 
         public override string ToString()

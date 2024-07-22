@@ -51,7 +51,7 @@ namespace Proffeine.Status
                                     {
                                         var oldValue = p.Previous;
                                         var newValue = p.Current;
-                                        percentValues.SetStat(key, x => x + (newValue - oldValue));
+                                        percentValues.SetStatus(key, x => x + (newValue - oldValue));
                                         // Debug.Log(percentValues.ToString());
                                     });
                                 add
@@ -60,11 +60,11 @@ namespace Proffeine.Status
                                     {
                                         var oldValue = p.Previous;
                                         var newValue = p.Current;
-                                        addValues.SetStat(key, x => x + (newValue - oldValue));
+                                        addValues.SetStatus(key, x => x + (newValue - oldValue));
                                         // Debug.Log(addValues.ToString());
                                     });
-                                percentValues.SetStat(key, x => x + percent.Value);
-                                addValues.SetStat(key, x => x + add.Value);
+                                percentValues.SetStatus(key, x => x + percent.Value);
+                                addValues.SetStatus(key, x => x + add.Value);
                             });
 
                         //remove
@@ -76,8 +76,8 @@ namespace Proffeine.Status
                                 var percent = e.Value.percent.Value;
                                 var add = e.Value.add.Value;
 
-                                percentValues.SetStat(key, x => x - percent);
-                                addValues.SetStat(key, x => x - add);
+                                percentValues.SetStatus(key, x => x - percent);
+                                addValues.SetStatus(key, x => x - add);
 
                                 if (casterInfo[kvp.Key].Count == 0)
                                     casterInfo.Remove(kvp.Key);
@@ -94,8 +94,8 @@ namespace Proffeine.Status
                                 var newPercent = e.NewValue.percent.Value;
                                 var newAdd = e.NewValue.add.Value;
 
-                                percentValues.SetStat(key, x => x + (newPercent - oldPercent));
-                                addValues.SetStat(key, x => x + (newAdd - oldAdd));
+                                percentValues.SetStatus(key, x => x + (newPercent - oldPercent));
+                                addValues.SetStatus(key, x => x + (newAdd - oldAdd));
                             });
                     });
 
@@ -105,8 +105,8 @@ namespace Proffeine.Status
                     {
                         foreach (var info in kvp.Value)
                         {
-                            percentValues.SetStat(info.Key, x => x - info.Value.percent.Value);
-                            addValues.SetStat(info.Key, x => x - info.Value.add.Value);
+                            percentValues.SetStatus(info.Key, x => x - info.Value.percent.Value);
+                            addValues.SetStatus(info.Key, x => x - info.Value.add.Value);
                         }
                     });
 
@@ -164,13 +164,13 @@ namespace Proffeine.Status
             {
                 target.ChangeFrom(@base);
 
-                var percent = percentValues.GetStatus();
-                var add = addValues.GetStatus();
+                var percent = percentValues.GetAllStatus();
+                var add = addValues.GetAllStatus();
 
                 for (int i = 0; i < percent.Count; i++)
-                    target.SetStat((Key)i, x => x + x * percent[i]);
+                    target.SetStatus((Key)i, x => x + x * percent[i]);
                 for (int i = 0; i < add.Count; i++)
-                    target.SetStat((Key)i, x => x + add[i]);
+                    target.SetStatus((Key)i, x => x + add[i]);
             }
 
             /// <summary>
@@ -183,8 +183,8 @@ namespace Proffeine.Status
             public void Calculate(Key key, Status target, Status @base)
             {
                 //base + base * percent + add
-                target.SetStat(key, x => @base.GetStat(key) * (percentValues.GetStat(key) + 1));
-                target.SetStat(key, x => x + addValues.GetStat(key));
+                target.SetStatus(key, x => @base.GetStatus(key) * (percentValues.GetStatus(key) + 1));
+                target.SetStatus(key, x => x + addValues.GetStatus(key));
             }
 
             public override string ToString()
