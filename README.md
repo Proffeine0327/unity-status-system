@@ -45,8 +45,8 @@ public class Player : MonoBehaviour
 
     private void Awake()
     {
-        modifier.OnValueChange += key => modifier.Calculate(key, maxStats, BaseStatus);
-        maxStatus.OnStatChanged += (key, old, cur) =>
+        modifier.onValueChange += key => modifier.Calculate(key, maxStats, BaseStatus);
+        maxStatus.onStatChanged += (key, old, cur) =>
         {
             var diff = cur - old;
             curStatus.SetStatus(key, x => x + diff);

@@ -13,26 +13,26 @@ namespace Proffeine.Status
         {
             public class Info
             {
-                public ReactiveProperty<float> add = new();
-                public ReactiveProperty<float> percent = new();
+                public ReactiveProperty<float> _add = new();
+                public ReactiveProperty<float> _percent = new();
 
                 public Info(float add, float percent)
                 {
-                    this.add.Value = add;
-                    this.percent.Value = percent;
+                    this._add.Value = add;
+                    this._percent.Value = percent;
                 }
             }
 
-            private ReactiveDictionary<string, ReactiveDictionary<Key, Info>> casterInfo = new();
-            private Status percentValues = new();
-            private Status addValues = new();
+            private ReactiveDictionary<string, ReactiveDictionary<Key, Info>> _casterInfo = new();
+            private Status _percentValues = new();
+            private Status _addValues = new();
 
-            public event Action<Key> OnValueChange;
+            public event Action<Key> onValueChange;
 
             public Modifier()
             {
                 //caster add
-                casterInfo
+                _casterInfo
                     .ObserveAdd()
                     .Subscribe(kvp =>
                     {
@@ -42,8 +42,8 @@ namespace Proffeine.Status
                             .Subscribe(e =>
                             {
                                 var key = e.Key;
-                                var percent = e.Value.percent;
-                                var add = e.Value.add;
+                                var percent = e.Value._percent;
+                                var add = e.Value._add;
 
                                 percent
                                     .Pairwise()
@@ -51,7 +51,7 @@ namespace Proffeine.Status
                                     {
                                         var oldValue = p.Previous;
                                         var newValue = p.Current;
-                                        percentValues.SetStatus(key, x => x + (newValue - oldValue));
+                                        _percentValues.SetStatus(key, x => x + (newValue - oldValue));
                                         // Debug.Log(percentValues.ToString());
                                     });
                                 add
@@ -60,11 +60,11 @@ namespace Proffeine.Status
                                     {
                                         var oldValue = p.Previous;
                                         var newValue = p.Current;
-                                        addValues.SetStatus(key, x => x + (newValue - oldValue));
+                                        _addValues.SetStatus(key, x => x + (newValue - oldValue));
                                         // Debug.Log(addValues.ToString());
                                     });
-                                percentValues.SetStatus(key, x => x + percent.Value);
-                                addValues.SetStatus(key, x => x + add.Value);
+                                _percentValues.SetStatus(key, x => x + percent.Value);
+                                _addValues.SetStatus(key, x => x + add.Value);
                             });
 
                         //remove
@@ -73,14 +73,14 @@ namespace Proffeine.Status
                             .Subscribe(e =>
                             {
                                 var key = e.Key;
-                                var percent = e.Value.percent.Value;
-                                var add = e.Value.add.Value;
+                                var percent = e.Value._percent.Value;
+                                var add = e.Value._add.Value;
 
-                                percentValues.SetStatus(key, x => x - percent);
-                                addValues.SetStatus(key, x => x - add);
+                                _percentValues.SetStatus(key, x => x - percent);
+                                _addValues.SetStatus(key, x => x - add);
 
-                                if (casterInfo[kvp.Key].Count == 0)
-                                    casterInfo.Remove(kvp.Key);
+                                if (_casterInfo[kvp.Key].Count == 0)
+                                    _casterInfo.Remove(kvp.Key);
                             });
 
                         //replace
@@ -89,29 +89,29 @@ namespace Proffeine.Status
                             .Subscribe(e =>
                             {
                                 var key = e.Key;
-                                var oldPercent = e.OldValue.percent.Value;
-                                var oldAdd = e.OldValue.add.Value;
-                                var newPercent = e.NewValue.percent.Value;
-                                var newAdd = e.NewValue.add.Value;
+                                var oldPercent = e.OldValue._percent.Value;
+                                var oldAdd = e.OldValue._add.Value;
+                                var newPercent = e.NewValue._percent.Value;
+                                var newAdd = e.NewValue._add.Value;
 
-                                percentValues.SetStatus(key, x => x + (newPercent - oldPercent));
-                                addValues.SetStatus(key, x => x + (newAdd - oldAdd));
+                                _percentValues.SetStatus(key, x => x + (newPercent - oldPercent));
+                                _addValues.SetStatus(key, x => x + (newAdd - oldAdd));
                             });
                     });
 
-                casterInfo
+                _casterInfo
                     .ObserveRemove()
                     .Subscribe(kvp =>
                     {
                         foreach (var info in kvp.Value)
                         {
-                            percentValues.SetStatus(info.Key, x => x - info.Value.percent.Value);
-                            addValues.SetStatus(info.Key, x => x - info.Value.add.Value);
+                            _percentValues.SetStatus(info.Key, x => x - info.Value._percent.Value);
+                            _addValues.SetStatus(info.Key, x => x - info.Value._add.Value);
                         }
                     });
 
-                percentValues.OnStatChanged += (key, _, _) => OnValueChange?.Invoke(key);
-                addValues.OnStatChanged += (key, _, _) => OnValueChange?.Invoke(key);
+                _percentValues.onStatChanged += (key, _, _) => onValueChange?.Invoke(key);
+                _addValues.onStatChanged += (key, _, _) => onValueChange?.Invoke(key);
             }
 
             /// <summary>
@@ -126,33 +126,33 @@ namespace Proffeine.Status
                 Func<float, float> add
             )
             {
-                if (!casterInfo.ContainsKey(caster))
+                if (!_casterInfo.ContainsKey(caster))
                 {
                     if (add(0) == 0 && percent(0) == 0) return;
-                    casterInfo.Add(caster, new());
-                    casterInfo[caster].Add(key, new(add(0), percent(0)));
+                    _casterInfo.Add(caster, new());
+                    _casterInfo[caster].Add(key, new(add(0), percent(0)));
                     Debug.Log($"{add(0)} {percent(0)}");
                     return;
                 }
 
-                if (!casterInfo[caster].ContainsKey(key))
+                if (!_casterInfo[caster].ContainsKey(key))
                 {
                     if (add(0) == 0 && percent(0) == 0) return;
-                    casterInfo[caster].Add(key, new(add(0), percent(0)));
+                    _casterInfo[caster].Add(key, new(add(0), percent(0)));
                     Debug.Log($"{add(0)} {percent(0)}");
                     return;
                 }
 
-                var info = casterInfo[caster][key];
-                if (add(info.add.Value) == 0 && percent(info.percent.Value) == 0)
+                var info = _casterInfo[caster][key];
+                if (add(info._add.Value) == 0 && percent(info._percent.Value) == 0)
                 {
-                    casterInfo[caster].Remove(key);
+                    _casterInfo[caster].Remove(key);
                     return;
                 }
 
-                info.add.Value = add(info.add.Value);
-                info.percent.Value = percent(info.percent.Value);
-                Debug.Log($"{info.add.Value} {info.percent.Value}");
+                info._add.Value = add(info._add.Value);
+                info._percent.Value = percent(info._percent.Value);
+                Debug.Log($"{info._add.Value} {info._percent.Value}");
             }
 
             /// <summary>
@@ -164,8 +164,8 @@ namespace Proffeine.Status
             {
                 target.ChangeFrom(@base);
 
-                var percent = percentValues.GetAllStatus();
-                var add = addValues.GetAllStatus();
+                var percent = _percentValues.GetAllStatus();
+                var add = _addValues.GetAllStatus();
 
                 for (int i = 0; i < percent.Count; i++)
                     target.SetStatus((Key)i, x => x + x * percent[i]);
@@ -183,17 +183,17 @@ namespace Proffeine.Status
             public void Calculate(Key key, Status target, Status @base)
             {
                 //base + base * percent + add
-                target.SetStatus(key, x => @base.GetStatus(key) * (percentValues.GetStatus(key) + 1));
-                target.SetStatus(key, x => x + addValues.GetStatus(key));
+                target.SetStatus(key, x => @base.GetStatus(key) * (_percentValues.GetStatus(key) + 1));
+                target.SetStatus(key, x => x + _addValues.GetStatus(key));
             }
 
             public override string ToString()
             {
                 var sb = new StringBuilder();
                 sb.Append("percent\n");
-                sb.Append(percentValues.ToString()).Append("\n");
+                sb.Append(_percentValues.ToString()).Append("\n");
                 sb.Append("add\n");
-                sb.Append(addValues.ToString());
+                sb.Append(_addValues.ToString());
                 return sb.ToString();
             }
         }

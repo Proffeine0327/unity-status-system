@@ -18,24 +18,24 @@ namespace Proffeine.Status
         }
 
         //field
-        private ReactiveCollection<float> status;
+        private ReactiveCollection<float> _status;
 
         //event
         /// <summary>
         /// key, old, new
         /// </summary>
-        public event Action<Key, float, float> OnStatChanged;
+        public event Action<Key, float, float> onStatChanged;
 
         //method
         public Status()
         {
-            status = new();
+            _status = new();
             for (int i = 0; i < (int)Key.End; i++)
-                status.Add(0);
+                _status.Add(0);
 
-            status
+            _status
                 .ObserveReplace()
-                .Subscribe(e => OnStatChanged?.Invoke((Key)e.Index, e.OldValue, e.NewValue));
+                .Subscribe(e => onStatChanged?.Invoke((Key)e.Index, e.OldValue, e.NewValue));
         }
 
         public float this[Key key]
@@ -46,12 +46,12 @@ namespace Proffeine.Status
 
         public float GetStatus(Key key)
         {
-            return status[(int)key];
+            return _status[(int)key];
         }
 
         public IReadOnlyList<float> GetAllStatus()
         {
-            return status;
+            return _status;
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace Proffeine.Status
         /// <param name="modifier">parameter: current value, return: target value</param>
         public void SetStatus(Key key, Func<float, float> modifier)
         {
-            status[(int)key] = modifier(status[(int)key]);
+            _status[(int)key] = modifier(_status[(int)key]);
         }
 
         public Status Clone()
@@ -81,7 +81,7 @@ namespace Proffeine.Status
         public override string ToString()
         {
             var sb = new StringBuilder();
-            foreach (var stat in status)
+            foreach (var stat in _status)
                 sb.Append(stat.ToString()).Append('\n');
             return sb.ToString();
         }
