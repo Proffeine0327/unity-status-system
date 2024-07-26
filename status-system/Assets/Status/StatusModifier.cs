@@ -13,110 +13,71 @@ namespace Proffeine.Status
         {
             public class Info
             {
-                public ReactiveProperty<float> _add = new();
-                public ReactiveProperty<float> _percent = new();
+                private ReactiveProperty<Key> _key = new();
+                private ReactiveProperty<float> _percent = new();
+                private ReactiveProperty<float> _add = new();
+                private Action<Key> _onAnyValueChanged;
 
-                public Info(float add, float percent)
+                public ReactiveProperty<Key> key => _key;
+                public ReactiveProperty<float> percent => _percent;
+                public ReactiveProperty<float> add => _add;
+
+                public Info(Key key, float percent, float add, Status percentValues, Status addValues, Action<Key> onAnyValueChanged)
                 {
-                    this._add.Value = add;
-                    this._percent.Value = percent;
+                    _key.Value = key;
+                    _add.Value = add;
+                    _percent.Value = percent;
+                    _onAnyValueChanged = onAnyValueChanged;
+                    
+                    percentValues.SetStatus(key, x => x + percent);
+                    addValues.SetStatus(key, x => x + add);
+                    onAnyValueChanged?.Invoke(key);
+
+                    _key
+                        .Skip(0)
+                        .Pairwise()
+                        .Subscribe(pair =>
+                        {
+                            var oldKey = pair.Previous;
+                            var newKey = pair.Current;
+
+                            percentValues.SetStatus(oldKey, value => value - _percent.Value);
+                            addValues.SetStatus(oldKey, value => value - _add.Value);
+                            _onAnyValueChanged?.Invoke(oldKey);
+
+                            percentValues.SetStatus(newKey, value => value + _percent.Value);
+                            addValues.SetStatus(newKey, value => value + _add.Value);
+                            _onAnyValueChanged?.Invoke(newKey);
+                        });
+
+                    _percent
+                        .Skip(0)
+                        .Pairwise()
+                        .Subscribe(pair =>
+                        {
+                            percentValues.SetStatus(_key.Value, x => x + (pair.Current - pair.Previous));
+                            _onAnyValueChanged?.Invoke(_key.Value);
+                        });
+
+                    _add
+                        .Skip(0)
+                        .Pairwise()
+                        .Subscribe(pair =>
+                        {
+                            addValues.SetStatus(_key.Value, x => x + (pair.Current - pair.Previous));
+                            _onAnyValueChanged?.Invoke(_key.Value);
+                        });
                 }
             }
 
-            private ReactiveDictionary<string, ReactiveDictionary<Key, Info>> _casterInfo = new();
+            private ReactiveDictionary<string, Info> _modifiedInfos = new();
             private Status _percentValues = new();
             private Status _addValues = new();
 
             public event Action<Key> onValueChange;
 
-            public Modifier()
-            {
-                //caster add
-                _casterInfo
-                    .ObserveAdd()
-                    .Subscribe(kvp =>
-                    {
-                        //key add
-                        kvp.Value
-                            .ObserveAdd()
-                            .Subscribe(e =>
-                            {
-                                var key = e.Key;
-                                var percent = e.Value._percent;
-                                var add = e.Value._add;
-
-                                percent
-                                    .Pairwise()
-                                    .Subscribe(p =>
-                                    {
-                                        var oldValue = p.Previous;
-                                        var newValue = p.Current;
-                                        _percentValues.SetStatus(key, x => x + (newValue - oldValue));
-                                        // Debug.Log(percentValues.ToString());
-                                    });
-                                add
-                                    .Pairwise()
-                                    .Subscribe(p =>
-                                    {
-                                        var oldValue = p.Previous;
-                                        var newValue = p.Current;
-                                        _addValues.SetStatus(key, x => x + (newValue - oldValue));
-                                        // Debug.Log(addValues.ToString());
-                                    });
-                                _percentValues.SetStatus(key, x => x + percent.Value);
-                                _addValues.SetStatus(key, x => x + add.Value);
-                            });
-
-                        //remove
-                        kvp.Value
-                            .ObserveRemove()
-                            .Subscribe(e =>
-                            {
-                                var key = e.Key;
-                                var percent = e.Value._percent.Value;
-                                var add = e.Value._add.Value;
-
-                                _percentValues.SetStatus(key, x => x - percent);
-                                _addValues.SetStatus(key, x => x - add);
-
-                                if (_casterInfo[kvp.Key].Count == 0)
-                                    _casterInfo.Remove(kvp.Key);
-                            });
-
-                        //replace
-                        kvp.Value
-                            .ObserveReplace()
-                            .Subscribe(e =>
-                            {
-                                var key = e.Key;
-                                var oldPercent = e.OldValue._percent.Value;
-                                var oldAdd = e.OldValue._add.Value;
-                                var newPercent = e.NewValue._percent.Value;
-                                var newAdd = e.NewValue._add.Value;
-
-                                _percentValues.SetStatus(key, x => x + (newPercent - oldPercent));
-                                _addValues.SetStatus(key, x => x + (newAdd - oldAdd));
-                            });
-                    });
-
-                _casterInfo
-                    .ObserveRemove()
-                    .Subscribe(kvp =>
-                    {
-                        foreach (var info in kvp.Value)
-                        {
-                            _percentValues.SetStatus(info.Key, x => x - info.Value._percent.Value);
-                            _addValues.SetStatus(info.Key, x => x - info.Value._add.Value);
-                        }
-                    });
-
-                _percentValues.onStatChanged += (key, _, _) => onValueChange?.Invoke(key);
-                _addValues.onStatChanged += (key, _, _) => onValueChange?.Invoke(key);
-            }
-
             /// <summary>
             /// Add or change the modifier.
-            /// If the add and percent values are calculated as 0, the infomation is removed
             /// </summary>
             public void Set
             (
@@ -126,33 +87,24 @@ namespace Proffeine.Status
                 Func<float, float> add
             )
             {
-                if (!_casterInfo.ContainsKey(caster))
+                if (_modifiedInfos.ContainsKey(caster))
                 {
-                    if (add(0) == 0 && percent(0) == 0) return;
-                    _casterInfo.Add(caster, new());
-                    _casterInfo[caster].Add(key, new(add(0), percent(0)));
-                    Debug.Log($"{add(0)} {percent(0)}");
-                    return;
+                    _modifiedInfos[caster].key.Value = key;
+                    _modifiedInfos[caster].percent.Value = percent(_modifiedInfos[caster].percent.Value);
+                    _modifiedInfos[caster].add.Value = add(_modifiedInfos[caster].add.Value);
                 }
-
-                if (!_casterInfo[caster].ContainsKey(key))
+                else
                 {
-                    if (add(0) == 0 && percent(0) == 0) return;
-                    _casterInfo[caster].Add(key, new(add(0), percent(0)));
-                    Debug.Log($"{add(0)} {percent(0)}");
-                    return;
+                    _modifiedInfos.Add(caster, new Info(key, percent(0), add(0), _percentValues, _addValues, onValueChange));
                 }
+            }
 
-                var info = _casterInfo[caster][key];
-                if (add(info._add.Value) == 0 && percent(info._percent.Value) == 0)
-                {
-                    _casterInfo[caster].Remove(key);
-                    return;
-                }
-
-                info._add.Value = add(info._add.Value);
-                info._percent.Value = percent(info._percent.Value);
-                Debug.Log($"{info._add.Value} {info._percent.Value}");
+            /// <summary>
+            /// Remove caster
+            /// </summary>
+            public void Remove(string caster)
+            {
+                _modifiedInfos.Remove(caster);
             }
 
             /// <summary>

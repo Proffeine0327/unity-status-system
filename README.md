@@ -45,7 +45,7 @@ public class Player : MonoBehaviour
 
     private void Awake()
     {
-        modifier.onValueChange += key => modifier.Calculate(key, maxStats, BaseStatus);
+        modifier.onValueChange += key => modifier.Calculate(key, maxStatus, BaseStatus);
         maxStatus.onStatChanged += (key, old, cur) =>
         {
             var diff = cur - old;
@@ -74,7 +74,7 @@ public class VeryAwesomeArmor
     {
         player.modifier.Set(
             "VeryAwesomeArmor", 
-            Status.Key.Hp, 
+            Status.Key.Hp,
             percent => 0.1,
             add => 0
         );
