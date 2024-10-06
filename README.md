@@ -46,7 +46,7 @@ public class Player : MonoBehaviour
     private void Awake()
     {
         modifier.onValueChange += key => modifier.Calculate(key, maxStatus, BaseStatus);
-        maxStatus.onStatChanged += (key, old, cur) =>
+        maxStatus.onStatusChanged += (key, old, cur) =>
         {
             var diff = cur - old;
             curStatus.SetStatus(key, x => x + diff);
@@ -99,5 +99,5 @@ public class Player : MonoBehaviour
 # Dependency
 [UniRx](https://github.com/neuecc/UniRx/releases/tag/7.1.0)
 
-# Lisence
-MIT Lisence
+# License
+MIT License
