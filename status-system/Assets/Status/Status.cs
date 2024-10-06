@@ -5,7 +5,7 @@ using UniRx;
 
 namespace Proffeine.Status
 {
-    public partial class Status
+    public partial class Status : IReadonlyStatus
     {
         //define
         public enum Key
@@ -24,7 +24,7 @@ namespace Proffeine.Status
         /// <summary>
         /// key, old, new
         /// </summary>
-        public event Action<Key, float, float> onStatChanged;
+        public event Action<Key, float, float> onStatusChanged;
 
         //method
         public Status()
@@ -35,7 +35,7 @@ namespace Proffeine.Status
 
             _status
                 .ObserveReplace()
-                .Subscribe(e => onStatChanged?.Invoke((Key)e.Index, e.OldValue, e.NewValue));
+                .Subscribe(e => onStatusChanged?.Invoke((Key)e.Index, e.OldValue, e.NewValue));
         }
 
         public float this[Key key]
@@ -71,7 +71,7 @@ namespace Proffeine.Status
             return status;
         }
 
-        public void ChangeFrom(Status target)
+        public void ChangeFrom(IReadonlyStatus target)
         {
             var status = target.GetAllStatus();
             for (int i = 0; i < status.Count; i++)
