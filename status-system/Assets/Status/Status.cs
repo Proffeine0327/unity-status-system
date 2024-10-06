@@ -5,7 +5,7 @@ using UniRx;
 
 namespace Proffeine.Status
 {
-    public partial class Status : IReadonlyStatus
+    public partial class Status : IReadOnlyStatus
     {
         //define
         public enum Key
@@ -71,7 +71,7 @@ namespace Proffeine.Status
             return status;
         }
 
-        public void ChangeFrom(IReadonlyStatus target)
+        public void ChangeFrom(IReadOnlyStatus target)
         {
             var status = target.GetAllStatus();
             for (int i = 0; i < status.Count; i++)

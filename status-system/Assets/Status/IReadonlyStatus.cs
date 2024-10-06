@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Proffeine.Status
 {
-    public interface IReadonlyStatus
+    public interface IReadOnlyStatus
     {
         public float this[Status.Key key] { get; }
         public float GetStatus(Status.Key key);

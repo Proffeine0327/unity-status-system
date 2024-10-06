@@ -112,7 +112,7 @@ namespace Proffeine.Status
             /// </summary>
             /// <param name="target">target apply status</param>
             /// <param name="base">base status</param>
-            public void CalculateAll(Status target, IReadonlyStatus @base)
+            public void CalculateAll(Status target, IReadOnlyStatus @base)
             {
                 target.ChangeFrom(@base);
 
@@ -132,7 +132,7 @@ namespace Proffeine.Status
             /// <param name="key">target calculate key</param>
             /// <param name="target">target apply status</param>
             /// <param name="base">base status</param>
-            public void Calculate(Key key, Status target, IReadonlyStatus @base)
+            public void Calculate(Key key, Status target, IReadOnlyStatus @base)
             {
                 //base + base * percent + add
                 target.SetStatus(key, x => @base.GetStatus(key) * (_percentValues.GetStatus(key) + 1));
